@@ -16,7 +16,7 @@ from torch.autograd import Variable
 import torch
 import time
 
-from apex import amp
+# from apex import amp
 
 def train_loop(model, loss_func, scaler, epoch, optim, train_dataloader, val_dataloader, encoder, iteration, logger, args, mean, std):
     logger.update_total_iter(int(train_dataloader._size // args.batch_size) )
