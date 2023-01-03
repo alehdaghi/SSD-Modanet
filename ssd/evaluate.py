@@ -53,9 +53,9 @@ def evaluate(model, coco, cocoGt, encoder, inv_map, args):
                 plabel_i = plabel[idx, :, :].unsqueeze(0)
 
                 try:
-                    starttime = timeit.default_timer()
+                    # starttime = timeit.default_timer()
                     result = encoder.decode_batch(ploc_i, plabel_i, 0.50, 200)[0]
-                    print("decode time :", timeit.default_timer() - starttime)
+                    # print("decode :", timeit.default_timer() - starttime)
                 except:
                     raise
                     print("")

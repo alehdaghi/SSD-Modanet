@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import json
 import os
 
 import torch
@@ -25,7 +25,14 @@ from ssd.coco_pipeline import COCOPipeline, DALICOCOIterator
 
 
 def get_train_loader(args, local_seed):
-    train_annotate = os.path.join(args.data, "instances_val.json")
+    train_annotate = os.path.join(args.data, "instances_train.json")
+
+    size = 0
+    with open(train_annotate) as fin:
+        data = json.load(fin)
+        size = len(data['images'])
+
+
     train_coco_root = os.path.join(args.data, "data")
 
     # train_annotate = os.path.join(args.data, "../fiftyone/coco-2014/validation/labels.json")
@@ -43,7 +50,7 @@ def get_train_loader(args, local_seed):
         num_threads=args.num_workers, seed=local_seed)
     train_pipe.build()
     test_run = train_pipe.schedule_run(), train_pipe.share_outputs(), train_pipe.release_outputs()
-    train_loader = DALICOCOIterator(train_pipe, 20)
+    train_loader = DALICOCOIterator(train_pipe, size)
     return train_loader
 
 
