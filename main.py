@@ -172,7 +172,7 @@ def train(train_loop_func, logger, args):
             load_checkpoint(ssd300.module if args.distributed else ssd300, args.checkpoint)
             checkpoint = torch.load(args.checkpoint,
                                     map_location=lambda storage, loc: storage.cuda(torch.cuda.current_device()))
-            start_epoch = checkpoint['epoch']
+            start_epoch = 0#checkpoint['epoch']
             iteration = checkpoint['iteration']
             scheduler.load_state_dict(checkpoint['scheduler'])
             optimizer.load_state_dict(checkpoint['optimizer'])
@@ -193,6 +193,7 @@ def train(train_loop_func, logger, args):
     scaler = torch.cuda.amp.GradScaler(enabled=args.amp)
     mean, std = generate_mean_std(args)
 
+    iteration = 0
     for epoch in range(start_epoch, args.epochs):
         start_epoch_time = time.time()
         iteration = train_loop_func(ssd300, loss_func, scaler,
