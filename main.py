@@ -59,7 +59,7 @@ def make_parser():
                         help='number of epochs for training')
     parser.add_argument('--batch-size', '--bs', type=int, default=4,
                         help='number of examples for each iteration')
-    parser.add_argument('--eval-batch-size', '--ebs', type=int, default=8,
+    parser.add_argument('--eval-batch-size', '--ebs', type=int, default=16,
                         help='number of examples for each evaluation iteration')
     parser.add_argument('--no-cuda', action='store_true',
                         help='use available GPUs')

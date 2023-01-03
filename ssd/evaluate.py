@@ -19,7 +19,7 @@ from contextlib import redirect_stdout
 import io
 
 from pycocotools.cocoeval import COCOeval
-
+import timeit
 
 def evaluate(model, coco, cocoGt, encoder, inv_map, args):
     if args.distributed:
@@ -35,12 +35,14 @@ def evaluate(model, coco, cocoGt, encoder, inv_map, args):
 
     # for idx, image_id in enumerate(coco.img_keys):
     for nbatch, (img, img_id, img_size, _, _) in enumerate(coco):
-        print("Parsing batch: {}/{}".format(nbatch, len(coco)), end='\r')
+        print("Parsing batch: {}/{}".format(nbatch, len(coco)))
         with torch.no_grad():
             inp = img.cuda()
             with torch.cuda.amp.autocast(enabled=args.amp):
                 # Get predictions
+                starttime = timeit.default_timer()
                 ploc, plabel = model(inp)
+                print("feat time :", timeit.default_timer() - starttime)
             ploc, plabel = ploc.float(), plabel.float()
 
             # Handle the batch of predictions produced
@@ -51,7 +53,9 @@ def evaluate(model, coco, cocoGt, encoder, inv_map, args):
                 plabel_i = plabel[idx, :, :].unsqueeze(0)
 
                 try:
+                    starttime = timeit.default_timer()
                     result = encoder.decode_batch(ploc_i, plabel_i, 0.50, 200)[0]
+                    print("decode time :", timeit.default_timer() - starttime)
                 except:
                     raise
                     print("")
@@ -67,6 +71,7 @@ def evaluate(model, coco, cocoGt, encoder, inv_map, args):
                                 (loc_[3] - loc_[1]) * htot,
                                 prob_,
                                 inv_map[label_]])
+        # break
 
     # Now we have all predictions from this rank, gather them all together
     # if necessary
