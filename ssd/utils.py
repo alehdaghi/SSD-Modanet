@@ -555,7 +555,7 @@ class COCODetection(data.Dataset):
         return img, img_id, (htot, wtot), bbox_sizes, bbox_labels
 
 
-def draw_patches(img, bboxes, labels, order="xywh", label_map={}):
+def draw_patches(img, bboxes, labels, order="ltrb", label_map={}):
 
     import matplotlib.pyplot as plt
     import matplotlib.patches as patches
@@ -564,7 +564,8 @@ def draw_patches(img, bboxes, labels, order="xywh", label_map={}):
     # img = img.numpy()
     img = np.array(img)
     labels = np.array(labels)
-    bboxes = bboxes.numpy()
+    if bboxes is torch.Tensor:
+        bboxes = bboxes.numpy()
 
     if label_map:
         labels = [label_map.get(l) for l in labels]
@@ -593,3 +594,68 @@ def draw_patches(img, bboxes, labels, order="xywh", label_map={}):
         ax.text(cx-0.5*w, cy-0.5*h, label, ha="center", va="center", size=15, bbox=bbox_props)
     plt.show()
 
+
+def modanet_categories():
+    str = '''
+    {
+        "categories": [{
+            "supercategory": "fashion",
+            "id": 1,
+            "name": "bag"
+        }, {
+            "supercategory": "fashion",
+            "id": 2,
+            "name": "belt"
+        }, {
+            "supercategory": "fashion",
+            "id": 3,
+            "name": "boots"
+        }, {
+            "supercategory": "fashion",
+            "id": 4,
+            "name": "footwear"
+        }, {
+            "supercategory": "fashion",
+            "id": 5,
+            "name": "outer"
+        }, {
+            "supercategory": "fashion",
+            "id": 6,
+            "name": "dress"
+        }, {
+            "supercategory": "fashion",
+            "id": 7,
+            "name": "sunglasses"
+        }, {
+            "supercategory": "fashion",
+            "id": 8,
+            "name": "pants"
+        }, {
+            "supercategory": "fashion",
+            "id": 9,
+            "name": "top"
+        }, {
+            "supercategory": "fashion",
+            "id": 10,
+            "name": "shorts"
+        }, {
+            "supercategory": "fashion",
+            "id": 11,
+            "name": "skirt"
+        }, {
+            "supercategory": "fashion",
+            "id": 12,
+            "name": "headwear"
+        }, {
+            "supercategory": "fashion",
+            "id": 13,
+            "name": "scarf/tie"
+        }]
+    }
+    '''
+    cats = json.loads(str)
+    d = {}
+    for i in cats["categories"]:
+        d[i['id']] = i['name']
+
+    return d

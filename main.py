@@ -20,7 +20,7 @@ import numpy as np
 from torch.optim.lr_scheduler import MultiStepLR
 import torch.utils.data.distributed
 
-from ssd.model import SSD300, ResNet, Loss
+from ssd.model import SSD300, ResNet, Loss, MobileNet
 from ssd.utils import dboxes300_coco, Encoder
 from ssd.logger import Logger, BenchLogger
 from ssd.evaluate import evaluate
@@ -91,7 +91,7 @@ def make_parser():
                         help='Number of warmup iterations for benchmarking')
 
     parser.add_argument('--backbone', type=str, default='resnet18',
-                        choices=['resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152'])
+                        choices=['resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152', 'mobnet_v3s', 'mobnet_v3l', 'mobnet_v2'])
     parser.add_argument('--backbone-path', type=str, default=None,
                         help='Path to chekcpointed backbone. It should match the'
                              ' backbone model declared with the --backbone argument.'
@@ -150,7 +150,13 @@ def train(train_loop_func, logger, args):
     val_dataset = get_val_dataset(args)
     val_dataloader = get_val_dataloader(val_dataset, args)
 
-    ssd300 = SSD300(backbone=ResNet(args.backbone, args.backbone_path))
+    backbone = None
+    if args.backbone.startswith("resnet"):
+        backbone = ResNet(args.backbone)
+    else:
+        backbone = MobileNet(args.backbone, args.backbone_path)
+
+    ssd300 = SSD300(backbone=backbone)
     args.learning_rate = args.learning_rate * args.N_gpu * (args.batch_size / 32)
     start_epoch = 0
     iteration = 0
@@ -224,7 +230,7 @@ def train(train_loop_func, logger, args):
                 obj['model'] = ssd300.module.state_dict()
             else:
                 obj['model'] = ssd300.state_dict()
-            save_path = os.path.join(args.save, f'epoch_{epoch}.pt')
+            save_path = os.path.join(args.save, f'{args.backbone}_epoch_{epoch}.pt')
             torch.save(obj, save_path)
             logger.log('model path', save_path)
         train_loader.reset()

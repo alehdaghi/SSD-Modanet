@@ -15,6 +15,7 @@
 import torch
 import torch.nn as nn
 from torchvision.models.resnet import resnet18, resnet34, resnet50, resnet101, resnet152
+from torchvision.models.mobilenet import mobilenet_v2, mobilenet_v3_large, mobilenet_v3_small
 
 
 class ResNet(nn.Module):
@@ -51,6 +52,38 @@ class ResNet(nn.Module):
         x = self.feature_extractor(x)
         return x
 
+class MobileNet(nn.Module):
+    def __init__(self, backbone='small', backbone_path=None):
+        super().__init__()
+        if backbone == 'mobnet_v3s':
+            backbone = mobilenet_v3_small()
+            self.out_channels = [576, 512, 512, 256, 256, 128]
+            backbone.features[-4].block[1][0].stride = (1, 1)
+            backbone.features[4].block[1][0].stride = (1, 1)
+        elif backbone == 'mobnet_v3l':
+            backbone = mobilenet_v3_large()
+            self.out_channels = [960, 512, 512, 256, 256, 256]
+            backbone.features[-4].block[1][0].stride = (1, 1)
+            backbone.features[7].block[1][0].stride = (1, 1)
+        # elif backbone == 'mobnet_v1':
+        #     backbone = mobilenet_v2()
+        #     self.out_channels = [1280, 512, 512, 256, 256, 256]
+        #     backbone.features[-5].conv[1][0].stride = (1, 1)
+        elif backbone == 'mobnet_v2':
+            backbone = mobilenet_v2()
+            self.out_channels = [1280, 512, 512, 256, 256, 256]
+            backbone.features[-5].conv[1][0].stride = (1, 1)
+
+        if backbone_path:
+            backbone.load_state_dict(torch.load(backbone_path))
+
+
+
+        self.feature_extractor = backbone.features
+
+    def forward(self, x):
+        x = self.feature_extractor(x)
+        return x
 
 class SSD300(nn.Module):
     def __init__(self, backbone=ResNet('resnet50')):
@@ -108,7 +141,7 @@ class SSD300(nn.Module):
     def bbox_view(self, src, loc, conf):
         ret = []
         for s, l, c in zip(src, loc, conf):
-            ret.append((l(s).view(s.size(0), 4, -1), c(s).view(s.size(0), self.label_num, -1)))
+            ret.append((l(s).contiguous().view(s.size(0), 4, -1), c(s).contiguous().view(s.size(0), self.label_num, -1)))
 
         locs, confs = list(zip(*ret))
         locs, confs = torch.cat(locs, 2).contiguous(), torch.cat(confs, 2).contiguous()

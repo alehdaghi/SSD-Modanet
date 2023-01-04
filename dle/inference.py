@@ -14,6 +14,8 @@
 
 import numpy as np
 import skimage
+import skimage.io
+import skimage.transform
 
 def load_image(image_path):
     """Code from Loading_Pretrained_Models.ipynb - a Caffe2 tutorial"""
@@ -25,6 +27,7 @@ def load_image(image_path):
 
 def rescale(img, input_height, input_width):
     """Code from Loading_Pretrained_Models.ipynb - a Caffe2 tutorial"""
+    return skimage.transform.resize(img, (input_width, input_height))
     aspect = img.shape[1]/float(img.shape[0])
     if(aspect>1):
         # landscape orientation - wide image
@@ -52,7 +55,7 @@ def normalize(img, mean=128, std=128):
 def prepare_input(img_uri):
     img = load_image(img_uri)
     img = rescale(img, 300, 300)
-    img = crop_center(img, 300, 300)
-    img = normalize(img)
+    # img = crop_center(img, 300, 300)
+    # img = normalize(img)
 
     return img
